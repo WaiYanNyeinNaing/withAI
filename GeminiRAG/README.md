@@ -10,9 +10,11 @@ A sophisticated Retrieval-Augmented Generation (RAG) system powered by Google Ge
 - **Intelligent Deduplication**: Combines results from both methods (typically 5-10 unique chunks)
 
 ### 🧠 3-Stage Step-Back Prompting
-1. **Stage 1 - Initial Thinking** (`gemini-2.0-flash-thinking-exp-1219`): Fast initial analysis and draft answer
-2. **Stage 2 - Reflection** (`gemini-2.5-pro`): Critical review to identify gaps and ensure intent alignment
-3. **Stage 3 - Final Synthesis** (`gemini-2.5-pro`): Polished comprehensive answer incorporating all insights
+All stages use `gemini-2.0-flash-thinking-exp-1219` for optimal speed while maintaining quality:
+
+1. **Stage 1 - Initial Thinking**: Fast initial analysis and draft answer
+2. **Stage 2 - Reflection**: Critical review to identify gaps and ensure intent alignment
+3. **Stage 3 - Final Synthesis**: Polished comprehensive answer incorporating all insights
 
 ### 📝 Smart Chunking
 - **Hybrid Semantic Chunking**: Base splitting (1500 chars) + semantic refinement (90th percentile threshold)
@@ -136,8 +138,7 @@ Frontend runs on: **http://localhost:5173**
 - react-syntax-highlighter
 
 **AI Models**:
-- `gemini-2.5-pro` (Final synthesis)
-- `gemini-2.0-flash-thinking-exp-1219` (Initial reasoning)
+- `gemini-2.0-flash-thinking-exp-1219` (All 3 stages - optimized for speed and quality)
 - `embedding-001` (Vector embeddings)
 
 ## 🔧 Configuration
@@ -149,9 +150,10 @@ GOOGLE_API_KEY=your_api_key_here
 
 ## 📊 Performance Notes
 
-- **Response Time**: ~10-20 seconds (3 LLM calls)
-- **Quality**: Significantly improved intent understanding and completeness
+- **Response Time**: ~5-10 seconds (3 Flash model calls - significantly faster than Pro)
+- **Quality**: Excellent intent understanding and completeness with Flash Thinking model
 - **Context Size**: 5-10 unique chunks per query (hybrid search deduplication)
+- **Cost**: Highly cost-effective using Flash model for all stages
 
 ## 🤝 Contributing
 

@@ -369,11 +369,20 @@ Your task:
 Provide a brief reflection (2-3 sentences) on the quality and completeness of the draft."""
             
             stage2_response = client.models.generate_content(
-                model="gemini-2.5-pro",
-                contents=stage2_prompt
+                model="gemini-2.0-flash-thinking-exp-1219",  # Using flash for comparison
+                contents=stage2_prompt,
+                config=types.GenerateContentConfig(
+                    thinking_config=types.ThinkingConfig(
+                        include_thoughts=True
+                    )
+                )
             )
             
-            stage2_reflection = stage2_response.candidates[0].content.parts[0].text
+            stage2_reflection = ""
+            for part in stage2_response.candidates[0].content.parts:
+                if not part.thought:
+                    stage2_reflection += part.text
+            
             yield f"data: {json.dumps({'type': 'stage2_reflection', 'content': stage2_reflection})}\n\n"
             
             # ============================================================
@@ -406,7 +415,7 @@ Now, provide a polished, detailed final answer that:
 Final Answer:"""
             
             stage3_response = client.models.generate_content_stream(
-                model="gemini-2.5-pro",
+                model="gemini-2.0-flash-thinking-exp-1219",  # Using flash for comparison
                 contents=stage3_prompt,
                 config=types.GenerateContentConfig(
                     thinking_config=types.ThinkingConfig(
