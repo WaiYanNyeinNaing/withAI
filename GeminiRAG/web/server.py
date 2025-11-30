@@ -373,7 +373,15 @@ Provide a brief reflection (2-3 sentences) on the quality and completeness of th
                 contents=stage2_prompt
             )
             
-            stage2_reflection = stage2_response.candidates[0].content.parts[0].text
+            # Safely extract reflection text
+            stage2_reflection = ""
+            if stage2_response.candidates and len(stage2_response.candidates) > 0:
+                candidate = stage2_response.candidates[0]
+                if candidate.content and candidate.content.parts:
+                    for part in candidate.content.parts:
+                        if hasattr(part, 'text') and part.text:
+                            stage2_reflection += part.text
+            
             yield f"data: {json.dumps({'type': 'stage2_reflection', 'content': stage2_reflection})}\n\n"
             
             # ============================================================
@@ -417,11 +425,14 @@ Final Answer:"""
             
             # Stream the final response
             for chunk in stage3_response:
-                for part in chunk.candidates[0].content.parts:
-                    if part.thought:
-                        yield f"data: {json.dumps({'type': 'stage3_thinking', 'content': part.text})}\n\n"
-                    elif part.text:
-                        yield f"data: {json.dumps({'type': 'content', 'content': part.text})}\n\n"
+                if chunk.candidates and len(chunk.candidates) > 0:
+                    candidate = chunk.candidates[0]
+                    if candidate.content and candidate.content.parts:
+                        for part in candidate.content.parts:
+                            if hasattr(part, 'thought') and part.thought:
+                                yield f"data: {json.dumps({'type': 'stage3_thinking', 'content': part.text})}\n\n"
+                            elif hasattr(part, 'text') and part.text:
+                                yield f"data: {json.dumps({'type': 'content', 'content': part.text})}\n\n"
                 await asyncio.sleep(0.01)
             
             # Send completion signal
