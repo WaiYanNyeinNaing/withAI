@@ -260,7 +260,9 @@ export function ChatInterface() {
 
                     {/* Final Answer */}
                     <div className="mb-2">
-                      <div className="text-sm font-semibold text-gray-700 mb-2">✨ Final Answer:</div>
+                      {(msg.stage1Thinking || msg.stage1Draft || msg.stage2Reflection || msg.stage3Thinking) && (
+                        <div className="text-sm font-semibold text-gray-700 mb-2">✨ Final Answer:</div>
+                      )}
                       <MarkdownRenderer content={msg.content} />
                     </div>
                     {msg.isStreaming && (
