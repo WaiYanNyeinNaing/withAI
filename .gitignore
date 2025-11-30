@@ -26,3 +26,4 @@ yarn-error.log*
 # Project specific
 GeminiRAG/documents/
 .file_search_store
+temp_*.txt
