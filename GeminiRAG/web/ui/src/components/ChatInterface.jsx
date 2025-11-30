@@ -279,38 +279,20 @@ export function ChatInterface() {
                       {msg.sources.map((source, sIdx) => {
                         const filename = source.metadata?.filename || source.metadata?.source || 'Unknown';
                         const page = source.metadata?.page;
-                        const chunkIndex = source.metadata?.chunk_index;
-                        const sourceType = source.source_type || 'unknown';
 
                         return (
                           <div key={sIdx} className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3 flex-1">
-                                <span className="text-xs font-semibold text-gray-500 min-w-[20px]">[{sIdx + 1}]</span>
-                                <div className="flex-1">
-                                  <div className="font-medium text-sm text-gray-700">
-                                    📄 {filename}
-                                  </div>
-                                  {(page !== undefined || chunkIndex !== undefined) && (
-                                    <div className="text-xs text-gray-500 mt-0.5">
-                                      {page !== undefined && `Page ${page}`}
-                                      {page !== undefined && chunkIndex !== undefined && ' • '}
-                                      {chunkIndex !== undefined && `Chunk ${chunkIndex}`}
-                                    </div>
-                                  )}
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs font-semibold text-gray-500 min-w-[24px]">[{sIdx + 1}]</span>
+                              <div className="flex-1">
+                                <div className="font-medium text-sm text-gray-700">
+                                  📄 {filename}
                                 </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className={`text-xs px-2 py-0.5 rounded font-medium ${sourceType === 'hybrid' ? 'bg-purple-100 text-purple-700' :
-                                    sourceType === 'semantic' ? 'bg-blue-100 text-blue-700' :
-                                      sourceType === 'bm25' ? 'bg-green-100 text-green-700' :
-                                        'bg-gray-100 text-gray-700'
-                                  }`}>
-                                  {sourceType.toUpperCase()}
-                                </span>
-                                <span className="text-xs text-gray-400 font-mono">
-                                  {source.score?.toFixed(3)}
-                                </span>
+                                {page !== undefined && (
+                                  <div className="text-xs text-gray-500 mt-0.5">
+                                    Page {page}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
