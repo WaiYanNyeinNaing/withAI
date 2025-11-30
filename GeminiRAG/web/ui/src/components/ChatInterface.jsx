@@ -273,25 +273,49 @@ export function ChatInterface() {
                   <div className="mt-6 pt-4 border-t border-gray-200">
                     <h4 className="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
                       <FileText size={16} />
-                      Sources Used
+                      References ({msg.sources.length})
                     </h4>
-                    <div className="grid gap-3">
-                      {msg.sources.map((source, sIdx) => (
-                        <div key={sIdx} className="bg-white border border-gray-200 rounded-lg p-3 text-sm hover:shadow-sm transition-shadow">
-                          <div className="flex justify-between items-start mb-1">
-                            <span className="font-medium text-gray-700 text-xs uppercase tracking-wider">
-                              Source {sIdx + 1}
-                            </span>
-                            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
-                              Score: {source.score?.toFixed(4) || 'N/A'}
-                            </span>
+                    <div className="grid gap-2">
+                      {msg.sources.map((source, sIdx) => {
+                        const filename = source.metadata?.filename || source.metadata?.source || 'Unknown';
+                        const page = source.metadata?.page;
+                        const chunkIndex = source.metadata?.chunk_index;
+                        const sourceType = source.source_type || 'unknown';
+
+                        return (
+                          <div key={sIdx} className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3 flex-1">
+                                <span className="text-xs font-semibold text-gray-500 min-w-[20px]">[{sIdx + 1}]</span>
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm text-gray-700">
+                                    📄 {filename}
+                                  </div>
+                                  {(page !== undefined || chunkIndex !== undefined) && (
+                                    <div className="text-xs text-gray-500 mt-0.5">
+                                      {page !== undefined && `Page ${page}`}
+                                      {page !== undefined && chunkIndex !== undefined && ' • '}
+                                      {chunkIndex !== undefined && `Chunk ${chunkIndex}`}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs px-2 py-0.5 rounded font-medium ${sourceType === 'hybrid' ? 'bg-purple-100 text-purple-700' :
+                                    sourceType === 'semantic' ? 'bg-blue-100 text-blue-700' :
+                                      sourceType === 'bm25' ? 'bg-green-100 text-green-700' :
+                                        'bg-gray-100 text-gray-700'
+                                  }`}>
+                                  {sourceType.toUpperCase()}
+                                </span>
+                                <span className="text-xs text-gray-400 font-mono">
+                                  {source.score?.toFixed(3)}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-gray-600 line-clamp-2 text-xs">{source.content}</p>
-                          <div className="mt-2 text-xs text-gray-400 font-mono truncate">
-                            {source.metadata?.source || 'Unknown Source'}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

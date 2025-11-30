@@ -25,7 +25,7 @@ All stages use `gemini-2.0-flash-thinking-exp-1219` for optimal speed while main
 - **Streaming Responses**: Real-time display of all reasoning stages
 - **Collapsible Stages**: Color-coded sections for each reasoning phase
 - **Markdown Rendering**: Syntax-highlighted code blocks, tables, and rich formatting
-- **Source Citations**: View which chunks were used (Semantic, BM25, or Hybrid)
+- **Clean References**: File-based citations with page numbers (no chunk content clutter)
 
 ## 🛠️ Setup
 
@@ -94,7 +94,7 @@ Frontend runs on: **http://localhost:5173**
    - 💭 **Stage 3: Final Thinking** - Follow the final reasoning
    - ✨ **Final Answer** - Get the polished response
 
-4. **View Sources**: Expand source citations to see which chunks were retrieved
+4. **View References**: See clean file-based citations with page numbers and source types
 
 5. **New Chat**: Click "New chat" to start a fresh conversation
 
