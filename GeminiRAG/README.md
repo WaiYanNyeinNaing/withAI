@@ -61,18 +61,74 @@ A sophisticated Retrieval-Augmented Generation (RAG) system powered by Google Ge
 
 ## ▶️ Running the Application
 
+GeminiRAG provides **two UI options** to suit different needs:
+
+### 🎯 UI Options
+
+#### 1. Test UI (Simple) - Port 6001
+- **Purpose**: Quick testing and debugging
+- **Tech**: Vanilla HTML/JS (no build process)
+- **Features**: File upload, search testing, stats viewer
+- **Best for**: Development, debugging, simple demos
+
+#### 2. Production UI (React) - Port 5173
+- **Purpose**: Production-ready chat interface
+- **Tech**: React + Vite + TailwindCSS
+- **Features**: Streaming, mode selector, rich markdown, collapsible reasoning stages
+- **Best for**: End users, professional demos, production deployment
+
+---
+
+### Quick Start Options
+
+#### Option A: Test UI Only (Fastest)
+```bash
+# Start backend (serves test UI at root)
+python web/server.py
+```
+Visit: **http://localhost:6001**
+
+#### Option B: Production UI (Recommended)
+```bash
+# Terminal 1: Start backend
+python web/server.py
+
+# Terminal 2: Start React frontend
+cd web/ui
+npm run dev
+```
+Visit: **http://localhost:5173**
+
+#### Option C: Use Helper Scripts
+```bash
+# Start both backend + frontend together
+./scripts/start_dev.sh
+
+# Or start individually
+./scripts/start_backend.sh
+./scripts/start_frontend.sh
+```
+
+---
+
+### Detailed Setup
+
 ### Start Backend Server
 ```bash
 python web/server.py
 ```
 Backend runs on: **http://localhost:6001**
+- Test UI available at root
+- API documentation at `/docs`
 
-### Start Frontend Dev Server
+### Start Frontend Dev Server (Optional)
 ```bash
 cd web/ui
 npm run dev
 ```
 Frontend runs on: **http://localhost:5173**
+- Production React interface
+- Hot reload enabled
 
 ## 📖 Usage
 

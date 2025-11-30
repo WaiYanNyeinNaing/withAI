@@ -36,7 +36,7 @@ class SearchRequest(BaseModel):
 
 @app.get("/")
 async def index():
-    return FileResponse("index.html")
+    return FileResponse("web/test_ui.html")
 
 @app.post("/add")
 async def add_document(request: AddDocumentRequest):
@@ -543,11 +543,19 @@ async def clear_collection():
 if __name__ == '__main__':
     import uvicorn
     print("=" * 60)
-    print("🚀 Starting Qdrant Test Server")
+    print("🚀 Starting GeminiRAG Backend Server")
     print("   URL: http://localhost:6001")
-    print("   This UI allows you to:")
-    print("   - Add text documents with different chunking strategies")
-    print("   - Search using semantic similarity")
-    print("   - View Qdrant collection statistics")
+    print("")
+    print("   📋 Two UIs Available:")
+    print("   1. Test UI (Simple): http://localhost:6001")
+    print("      - Quick testing and debugging")
+    print("      - Upload files, test search, view stats")
+    print("")
+    print("   2. Production UI (React): http://localhost:5173")
+    print("      - Run: cd web/ui && npm run dev")
+    print("      - ChatGPT-like interface with streaming")
+    print("      - Pro Mode (3-stage) and Flash Mode")
+    print("")
+    print("   📚 API Documentation: http://localhost:6001/docs")
     print("=" * 60)
     uvicorn.run(app, host="0.0.0.0", port=6001)
