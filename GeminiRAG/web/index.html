@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qdrant Semantic Search Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        select,
+        input[type="number"] {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin: 10px 5px 10px 0;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result strong {
+            color: #667eea;
+        }
+
+        .score {
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .success {
+            color: #10b981;
+            padding: 10px;
+            background: #d1fae5;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .error {
+            color: #ef4444;
+            padding: 10px;
+            background: #fee2e2;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    </style>
+    <!-- Add marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Markdown Styles */
+        .markdown-body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .markdown-body h1 {
+            font-size: 2em;
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+        }
+
+        .markdown-body h2 {
+            font-size: 1.5em;
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+        }
+
+        .markdown-body h3 {
+            font-size: 1.25em;
+        }
+
+        .markdown-body p {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body code {
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+        }
+
+        .markdown-body pre {
+            padding: 16px;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background-color: transparent;
+        }
+
+        .markdown-body ul,
+        .markdown-body ol {
+            padding-left: 2em;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body li {
+            margin-top: 0.25em;
+        }
+
+        .markdown-body blockquote {
+            padding: 0 1em;
+            color: #6a737d;
+            border-left: 0.25em solid #dfe2e5;
+            margin: 0 0 16px 0;
+        }
+
+        .markdown-body strong {
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔍 Qdrant Semantic Search Test</h1>
+
+        <div class="card">
+            <h2>📝 Add Documents</h2>
+
+            <div style="margin-bottom: 15px;">
+                <input type="file" id="fileInput" accept=".txt,.md,.pdf" multiple style="display: none;"
+                    onchange="handleFileUpload()">
+                <button onclick="document.getElementById('fileInput').click()"
+                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    📁 Upload Files (PDF, TXT, MD)
+                </button>
+                <div id="fileNames" style="margin-top: 10px; color: #666; font-size: 0.9em;"></div>
+            </div>
+
+            <p style="text-align: center; color: #999; margin: 10px 0;">— OR —</p>
+
+            <textarea id="docText" rows="6" placeholder="Paste your text here... For example:
+
+ReAct prompting is a technique where AI models combine reasoning and action. It stands for Reason + Act.
+
+Chain-of-Thought prompting encourages models to show their reasoning step by step."></textarea>
+
+            <div style="margin: 10px 0; color: #666; font-size: 0.9em;">
+                <i class="fas fa-info-circle"></i> Using <strong>Semantic Chunking</strong> (Hybrid)
+            </div>
+
+            <button onclick="addDocument()">Add to Qdrant</button>
+            <div id="addResult"></div>
+        </div>
+
+        <div class="card">
+            <h2>💬 Ask a Question (RAG)</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 10px;">Search + AI Answer Generation</p>
+            <div class="search-box">
+                <input type="text" id="questionInput" placeholder="Ask a question about your documents..." />
+                <input type="number" id="answerTopK" value="5" min="1" max="10" style="width: 80px;"
+                    title="Context chunks" />
+                <button onclick="askQuestion()">Ask</button>
+            </div>
+            <div id="answerResult"></div>
+        </div>
+
+        <div class="card">
+            <h2>🔎 Search</h2>
+            <div class="search-box">
+                <input type="text" id="searchQuery" placeholder="Enter your search query..." />
+                <input type="number" id="topK" value="3" min="1" max="10" style="width: 80px;" title="Top K results" />
+                <button onclick="search()">Search</button>
+            </div>
+            <div id="searchResults"></div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Collection Stats</h2>
+            <button onclick="getStats()">Refresh Stats</button>
+            <button onclick="clearAll()"
+                style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); margin-left: 10px;">
+                🗑️ Clear All Documents
+            </button>
+            <div id="stats"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+
+        function handleFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+            const fileNamesDiv = document.getElementById('fileNames');
+
+            if (files.length > 0) {
+                selectedFiles = Array.from(files);
+                const names = selectedFiles.map(f => f.name).join(', ');
+                fileNamesDiv.innerHTML = `<strong>Selected ${files.length} file(s):</strong><br>${names}`;
+                fileNamesDiv.style.color = '#10b981';
+            }
+        }
+
+        async function addDocument() {
+            const resultDiv = document.getElementById('addResult');
+
+            // Check if we have files or text
+            if (selectedFiles.length > 0) {
+                // Upload files
+                resultDiv.innerHTML = `<div>⏳ Uploading ${selectedFiles.length} file(s)...</div>`;
+
+                const formData = new FormData();
+                selectedFiles.forEach(file => {
+                    formData.append('files', file);
+                });
+
+                try {
+                    const res = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        let msg = `<div class="success">✅ Processed ${selectedFiles.length} files - ${data.total_chunks} total chunks added!</div>`;
+
+                        // Add details for each file
+                        if (data.results && data.results.length > 0) {
+                            msg += '<div style="margin-top:10px; font-size:0.9em;">';
+                            data.results.forEach(r => {
+                                const icon = r.status === 'success' ? '✅' : '❌';
+                                const details = r.status === 'success' ? `${r.chunks} chunks` : r.error || r.reason;
+                                msg += `<div>${icon} <strong>${r.filename}</strong>: ${details}</div>`;
+                            });
+                            msg += '</div>';
+                        }
+
+                        resultDiv.innerHTML = msg;
+                        selectedFiles = [];
+                        document.getElementById('fileInput').value = '';
+                        document.getElementById('fileNames').innerHTML = '';
+                        getStats();
+                    } else {
+                        resultDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+                    }
+                } catch (e) {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${e.message}</div>`;
+                }
+            } else {
+                // Use text from textarea
+                const text = document.getElementById('docText').value;
+
+                if (!text.trim()) {
+                    resultDiv.innerHTML = '<div class="error">❌ Please enter some text or upload a file!</div>';
+                    return;
+                }
+
+                resultDiv.innerHTML = '<div>⏳ Adding document...</div>';
+
+                try {
+                    const res = await fetch('/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text })
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        resultDiv.innerHTML = `<div class="success">✅ Added ${data.chunks} chunk(s) successfully!</div>`;
+                        document.getElementById('docText').value = '';
+                        getStats();
+                    } else {
+                        resultDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+                    }
+                } catch (e) {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${e.message}</div>`;
+                }
+            }
+        }
+
+        async function askQuestion() {
+            const query = document.getElementById('questionInput').value;
+            const resultDiv = document.getElementById('answerResult');
+
+            if (!query) return;
+
+            resultDiv.innerHTML = '<div style="text-align:center">🤔 Thinking...</div>';
+
+            try {
+                const res = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query, top_k: 5 })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+                } else {
+                    // Render Markdown Answer
+                    const renderedAnswer = marked.parse(data.answer);
+
+                    let html = `
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 5px solid #8b5cf6; margin-bottom: 20px;">
+                            <div class="markdown-body">${renderedAnswer}</div>
+                        </div>
+                        
+                        <h4 style="margin-top: 20px; color: #666;">📚 Sources Used:</h4>
+                    `;
+
+                    if (data.sources && data.sources.length > 0) {
+                        data.sources.forEach((s, i) => {
+                            html += `
+                                <div class="result" style="margin: 10px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                        <strong>Source ${i + 1}</strong>
+                                        <span class="score" style="color: #666; font-size: 0.9em;">${(s.source_type || 'unknown').toUpperCase()} MATCH</span>
+                                    </div>
+                                    <div style="font-size: 0.85em; color: #666; margin-bottom: 8px; background: #eee; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+                                        ${s.rank_info || 'Score info unavailable'}
+                                    </div>
+                                    <p style="margin: 10px 0;">${s.content}</p>
+                                    <p style="font-size: 12px; color: #666;">${JSON.stringify(s.metadata)}</p>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += '<p style="color: #666; font-style: italic;">No sources found.</p>';
+                    }
+
+                    resultDiv.innerHTML = html;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${e.message}</div>`;
+            }
+        }
+
+        async function search() {
+            const query = document.getElementById('searchQuery').value;
+            const topK = parseInt(document.getElementById('topK').value);
+            const resultsDiv = document.getElementById('searchResults');
+
+            if (!query.trim()) {
+                resultsDiv.innerHTML = '<div class="error">❌ Please enter a search query!</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div>⏳ Searching...</div>';
+
+            try {
+                const res = await fetch('/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, top_k: topK })
+                });
+                const data = await res.json();
+
+                if (data.results && data.results.length > 0) {
+                    let html = `<h3 style="margin: 15px 0;">Found ${data.results.length} result(s):</h3>`;
+                    data.results.forEach((r, i) => {
+                        html += `
+                            <div class="result">
+                                <p><strong>Result ${i + 1}</strong> <span class="score">Score: ${r.score.toFixed(4)}</span></p>
+                                <p style="margin: 10px 0;"><strong>Content:</strong><br>${r.content}</p>
+                                <p style="font-size: 12px; color: #666;"><strong>Metadata:</strong> ${JSON.stringify(r.metadata)}</p>
+                            </div>
+                        `;
+                    });
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">No results found. Try adding some documents first!</div>';
+                }
+            } catch (e) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${e.message}</div>`;
+            }
+        }
+
+        async function getStats() {
+            const statsDiv = document.getElementById('stats');
+            statsDiv.innerHTML = '<div>⏳ Loading stats...</div>';
+
+            try {
+                const res = await fetch('/stats');
+                const data = await res.json();
+                statsDiv.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">${data.points_count}</div>
+                            <div class="stat-label">Total Documents</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.vector_size}</div>
+                            <div class="stat-label">Vector Dimensions</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.collection_name}</div>
+                            <div class="stat-label">Collection Name</div>
+                        </div>
+                    </div>
+                `;
+            } catch (e) {
+                statsDiv.innerHTML = `<div class="error">❌ Error: ${e.message}</div>`;
+            }
+        }
+
+        async function clearAll() {
+            if (!confirm('⚠️ Are you sure you want to delete ALL documents from Qdrant? This cannot be undone!')) {
+                return;
+            }
+
+            const statsDiv = document.getElementById('stats');
+            statsDiv.innerHTML = '<div>⏳ Clearing all documents...</div>';
+
+            try {
+                const res = await fetch('/clear', {
+                    method: 'POST'
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    statsDiv.innerHTML = '<div class="success">✅ All documents cleared!</div>';
+                    // Refresh stats after a brief delay
+                    setTimeout(getStats, 1000);
+                } else {
+                    statsDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+                }
+            } catch (e) {
+                statsDiv.innerHTML = `<div class="error">❌ Error: ${e.message}</div>`;
+            }
+        }
+
+        // Load stats on page load
+        window.addEventListener('load', getStats);
+    </script>
+</body>
+
+</html>

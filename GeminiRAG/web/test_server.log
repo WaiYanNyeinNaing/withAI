@@ -1,0 +1,61 @@
+
+A module that was compiled using NumPy 1.x cannot be run in
+NumPy 2.0.2 as it may crash. To support both 1.x and 2.x
+versions of NumPy, modules must be compiled with NumPy 2.0.
+Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+
+If you are a user of the module, the easiest solution will be to
+downgrade to 'numpy<2' or try to upgrade the affected module.
+We expect that some modules will need time to support NumPy 2.
+
+Traceback (most recent call last):  File "/Users/waiyan/Downloads/Work/company/Agentic_RAG_Repo/GeminiRAG/qdrant_test_ui/server.py", line 17, in <module>
+    from backend.vector_store import DocumentStore
+  File "/Users/waiyan/Downloads/Work/company/Agentic_RAG_Repo/GeminiRAG/backend/vector_store.py", line 4, in <module>
+    from langchain_google_genai import GoogleGenerativeAIEmbeddings
+  File "/opt/anaconda3/lib/python3.9/site-packages/langchain_google_genai/__init__.py", line 61, in <module>
+    from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
+  File "/opt/anaconda3/lib/python3.9/site-packages/langchain_google_genai/chat_models.py", line 65, in <module>
+    from langchain_core.language_models import LangSmithParams, LanguageModelInput
+  File "/opt/anaconda3/lib/python3.9/site-packages/langchain_core/language_models/__init__.py", line 112, in __getattr__
+    result = import_attr(attr_name, module_name, __spec__.parent)
+  File "/opt/anaconda3/lib/python3.9/site-packages/langchain_core/_import_utils.py", line 36, in import_attr
+    module = import_module(f".{module_name}", package=package)
+  File "/opt/anaconda3/lib/python3.9/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "/opt/anaconda3/lib/python3.9/site-packages/langchain_core/language_models/base.py", line 44, in <module>
+    from transformers import GPT2TokenizerFast  # type: ignore[import-not-found]
+  File "/opt/anaconda3/lib/python3.9/site-packages/transformers/__init__.py", line 26, in <module>
+    from . import dependency_versions_check
+  File "/opt/anaconda3/lib/python3.9/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
+    from .utils.versions import require_version, require_version_core
+  File "/opt/anaconda3/lib/python3.9/site-packages/transformers/utils/__init__.py", line 27, in <module>
+    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
+  File "/opt/anaconda3/lib/python3.9/site-packages/transformers/utils/chat_template_utils.py", line 40, in <module>
+    from torch import Tensor
+  File "/opt/anaconda3/lib/python3.9/site-packages/torch/__init__.py", line 1477, in <module>
+    from .functional import *  # noqa: F403
+  File "/opt/anaconda3/lib/python3.9/site-packages/torch/functional.py", line 9, in <module>
+    import torch.nn.functional as F
+  File "/opt/anaconda3/lib/python3.9/site-packages/torch/nn/__init__.py", line 1, in <module>
+    from .modules import *  # noqa: F403
+  File "/opt/anaconda3/lib/python3.9/site-packages/torch/nn/modules/__init__.py", line 35, in <module>
+    from .transformer import TransformerEncoder, TransformerDecoder, \
+  File "/opt/anaconda3/lib/python3.9/site-packages/torch/nn/modules/transformer.py", line 20, in <module>
+    device: torch.device = torch.device(torch._C._get_default_device()),  # torch.device('cpu'),
+/opt/anaconda3/lib/python3.9/site-packages/torch/nn/modules/transformer.py:20: UserWarning: Failed to initialize NumPy: _ARRAY_API not found (Triggered internally at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:84.)
+  device: torch.device = torch.device(torch._C._get_default_device()),  # torch.device('cpu'),
+INFO:     Started server process [1441]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:6001 (Press CTRL+C to quit)
+============================================================
+🚀 Starting Qdrant Test Server
+   URL: http://localhost:6001
+   This UI allows you to:
+   - Add text documents with different chunking strategies
+   - Search using semantic similarity
+   - View Qdrant collection statistics
+============================================================
+INFO:     127.0.0.1:62666 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62666 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62695 - "GET /stats HTTP/1.1" 200 OK
