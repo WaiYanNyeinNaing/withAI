@@ -14,3 +14,4 @@ pypdf
 numpy
 python-dotenv
 aiofiles
+google-genai

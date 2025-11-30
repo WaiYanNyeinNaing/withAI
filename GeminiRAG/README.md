@@ -1,55 +1,162 @@
-# GeminiRAG: Hybrid Search RAG System
+# GeminiRAG: Advanced Hybrid Search RAG with Multi-Stage Reasoning
 
-A clean, powerful Retrieval-Augmented Generation (RAG) system powered by Google Gemini, Qdrant vector database, and BM25 keyword search.
+A sophisticated Retrieval-Augmented Generation (RAG) system powered by Google Gemini 2.5 Pro, featuring hybrid search and a 3-stage Step-Back Prompting pipeline for superior answer quality.
 
-## 🚀 Features
+## ✨ Key Features
 
-- **Hybrid Search**: Combines **Semantic Search** (Vector embeddings) and **Keyword Search** (BM25) for superior retrieval accuracy
-- **Smart Chunking**: Hybrid semantic chunking strategy that respects sentence boundaries and merges small chunks
-- **Detailed Answers**: Generates comprehensive, well-cited answers using Gemini 2.0 Flash
-- **Persistent Storage**: Qdrant for vectors with automatic BM25 index rebuilding on startup
-- **Clean UI**: User-friendly interface for uploading documents (PDF/TXT/MD) and testing RAG
+### 🔍 Hybrid Search
+- **Semantic Search**: Vector embeddings via Google's `embedding-001` model
+- **Keyword Search**: BM25 ranking algorithm for precise term matching
+- **Intelligent Deduplication**: Combines results from both methods (typically 5-10 unique chunks)
+
+### 🧠 3-Stage Step-Back Prompting
+1. **Stage 1 - Initial Thinking** (`gemini-2.0-flash-thinking-exp-1219`): Fast initial analysis and draft answer
+2. **Stage 2 - Reflection** (`gemini-2.5-pro`): Critical review to identify gaps and ensure intent alignment
+3. **Stage 3 - Final Synthesis** (`gemini-2.5-pro`): Polished comprehensive answer incorporating all insights
+
+### 📝 Smart Chunking
+- **Hybrid Semantic Chunking**: Base splitting (1500 chars) + semantic refinement (90th percentile threshold)
+- **Intelligent Merging**: Combines small chunks to ensure meaningful context (min 350 chars)
+- **Topic-Aware**: Splits on semantic shifts while preserving context
+
+### 🎨 Modern UI
+- **Streaming Responses**: Real-time display of all reasoning stages
+- **Collapsible Stages**: Color-coded sections for each reasoning phase
+- **Markdown Rendering**: Syntax-highlighted code blocks, tables, and rich formatting
+- **Source Citations**: View which chunks were used (Semantic, BM25, or Hybrid)
 
 ## 🛠️ Setup
 
-1. **Install Dependencies**:
+### Prerequisites
+- Python 3.9+
+- Node.js 18+
+- Google API Key ([Get one here](https://aistudio.google.com/app/apikey))
+
+### Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/WaiYanNyeinNaing/withAI.git
+   cd withAI/GeminiRAG
+   ```
+
+2. **Install Python dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-2. **Set API Key**:
-   Create a `.env` file:
-   ```
-   GOOGLE_API_KEY=your_api_key_here
+3. **Install Frontend dependencies**:
+   ```bash
+   cd web/ui
+   npm install
+   cd ../..
    ```
 
-## ▶️ Running
+4. **Set up environment variables**:
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your GOOGLE_API_KEY
+   ```
 
-Start the server:
+## ▶️ Running the Application
+
+### Start Backend Server
 ```bash
-cd web
-python server.py
+python web/server.py
 ```
+Backend runs on: **http://localhost:6001**
 
-Access the UI at: **http://localhost:6001**
+### Start Frontend Dev Server
+```bash
+cd web/ui
+npm run dev
+```
+Frontend runs on: **http://localhost:5173**
 
 ## 📖 Usage
 
-1. **Upload Documents**: Click "📁 Upload Files" to add PDFs, TXT, or MD files
-2. **Ask Questions**: Use the RAG section to get AI-powered answers with source citations
-3. **View Sources**: See which chunks were used (labeled as SEMANTIC, BM25, or HYBRID match)
-4. **Manage Data**: Clear all documents to start fresh
+1. **Upload Documents**: 
+   - Click "Upload & Index" tab
+   - Upload PDF, TXT, or MD files
+   - Documents are automatically chunked and indexed
+
+2. **Ask Questions**:
+   - Switch to "Chat" tab
+   - Ask questions about your documents
+   - Watch the 3-stage reasoning process unfold
+
+3. **Explore Reasoning**:
+   - 🧠 **Stage 1: Initial Thinking** - See the model's first thoughts
+   - 📝 **Stage 1: Draft Answer** - Review the initial answer
+   - 🔍 **Stage 2: Reflection** - Understand the quality check
+   - 💭 **Stage 3: Final Thinking** - Follow the final reasoning
+   - ✨ **Final Answer** - Get the polished response
+
+4. **View Sources**: Expand source citations to see which chunks were retrieved
+
+5. **New Chat**: Click "New chat" to start a fresh conversation
 
 ## 🏗️ Architecture
 
-See [system_design.md](system_design.md) for detailed architecture.
+### Backend (`web/server.py`)
+- **FastAPI** server with streaming support
+- **3-stage pipeline** for answer generation
+- **Hybrid search** combining vector and keyword methods
 
-**Key Components**:
-- `backend/vector_store.py` - Manages Qdrant + BM25 hybrid search
-- `backend/chunking.py` - Smart semantic chunking
-- `web/server.py` - FastAPI server
-- `web/index.html` - Web UI
+### Vector Store (`backend/vector_store.py`)
+- **Qdrant** for vector storage (local file-based)
+- **BM25** index for keyword search
+- **Hybrid search** with deduplication
 
-## 📦 What's in Archive
+### Chunking (`backend/chunking.py`)
+- **Semantic chunking** using Google embeddings
+- **Recursive base splitting** for initial chunks
+- **Intelligent merging** for optimal chunk sizes
 
-The `archive/` folder contains the old chat UI implementation and legacy code. The current clean implementation focuses solely on the hybrid search RAG system.
+### Frontend (`web/ui/`)
+- **React** with Vite
+- **Streaming UI** with real-time updates
+- **Markdown rendering** with syntax highlighting
+- **Collapsible sections** for each reasoning stage
+
+## 📦 Tech Stack
+
+**Backend**:
+- FastAPI, Uvicorn
+- LangChain, LangChain Google GenAI
+- Qdrant Client
+- rank-bm25
+- pypdf
+
+**Frontend**:
+- React 19
+- Vite
+- TailwindCSS
+- react-markdown
+- react-syntax-highlighter
+
+**AI Models**:
+- `gemini-2.5-pro` (Final synthesis)
+- `gemini-2.0-flash-thinking-exp-1219` (Initial reasoning)
+- `embedding-001` (Vector embeddings)
+
+## 🔧 Configuration
+
+Edit `.env` to configure:
+```
+GOOGLE_API_KEY=your_api_key_here
+```
+
+## 📊 Performance Notes
+
+- **Response Time**: ~10-20 seconds (3 LLM calls)
+- **Quality**: Significantly improved intent understanding and completeness
+- **Context Size**: 5-10 unique chunks per query (hybrid search deduplication)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+MIT License - see LICENSE file for details

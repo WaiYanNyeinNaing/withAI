@@ -6,3 +6,6 @@ __pycache__/
 env/
 venv/
 documents/
+qdrant_db/
+node_modules/
+dist/

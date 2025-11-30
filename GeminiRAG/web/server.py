@@ -156,7 +156,8 @@ async def search(request: SearchRequest):
 async def ask_question(request: SearchRequest):
     """RAG endpoint: Search + Synthesize answer with Gemini"""
     try:
-        import google.generativeai as genai
+        from google import genai
+        from google.genai import types
         import os
         
         # Get API key
@@ -164,7 +165,7 @@ async def ask_question(request: SearchRequest):
         if not api_key:
             return {'error': 'GOOGLE_API_KEY not found in environment'}
         
-        genai.configure(api_key=api_key)
+        client = genai.Client(api_key=api_key)
         
         print(f"[Qdrant Test] RAG Query: '{request.query}'")
         
@@ -185,9 +186,19 @@ async def ask_question(request: SearchRequest):
         ])
         
         # Generate answer with Gemini
-        prompt = f"""Based on the following context, provide a detailed and comprehensive answer to the question. 
-        Explain the concepts thoroughly, citing specific details from the context where appropriate.
-        If the context contains examples, include them in your explanation.
+        prompt = f"""You are an expert AI assistant designed to provide accurate, detailed, and helpful answers based *strictly* on the provided context.
+
+Your goal is to understand the user's intent and provide a comprehensive answer that directly addresses their needs.
+
+Instructions:
+1.  **Analyze the Request**: Carefully read the user's question to understand what they are asking.
+2.  **Analyze the Context**: Review the provided context to find relevant information.
+3.  **Think Step-by-Step**: Formulate a logical answer. Connect different pieces of information from the context.
+4.  **Formulate Answer**: Write a detailed answer.
+    *   Use clear and professional language.
+    *   Use Markdown formatting (bolding, lists, code blocks, tables) to make the answer readable.
+    *   If the context contains code, explain it clearly.
+    *   **Do NOT** include information that is not present in the context. If the context doesn't contain the answer, state that clearly.
 
 Context:
 {context}
@@ -196,9 +207,24 @@ Question: {request.query}
 
 Answer:"""
         
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
-        response = model.generate_content(prompt)
-        answer = response.text
+        response = client.models.generate_content(
+            model="gemini-2.5-pro", # Using gemini-2.5-pro as requested
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(
+                    include_thoughts=True
+                )
+            )
+        )
+        
+        answer = ""
+        thoughts = ""
+        
+        for part in response.candidates[0].content.parts:
+            if part.thought:
+                thoughts += part.text + "\n"
+            else:
+                answer += part.text
         
         # Format sources
         sources = [
@@ -217,6 +243,7 @@ Answer:"""
         return {
             'question': request.query,
             'answer': answer,
+            'thoughts': thoughts,
             'sources': sources
         }
     except Exception as e:
@@ -224,6 +251,190 @@ Answer:"""
         import traceback
         traceback.print_exc()
         return {'error': str(e)}
+
+@app.post("/ask_stream")
+async def ask_question_stream(request: SearchRequest):
+    """RAG endpoint with streaming: Search + Synthesize answer with Gemini (streamed)"""
+    from fastapi.responses import StreamingResponse
+    import json
+    import asyncio
+    
+    async def generate():
+        try:
+            from google import genai
+            from google.genai import types
+            import os
+            
+            # Get API key
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                yield f"data: {json.dumps({'error': 'GOOGLE_API_KEY not found in environment'})}\n\n"
+                return
+            
+            client = genai.Client(api_key=api_key)
+            
+            print(f"[Qdrant Test] Streaming RAG Query: '{request.query}'")
+            
+            # Use Hybrid Search for better retrieval
+            results = doc_store.hybrid_search(request.query, top_k=request.top_k)
+            
+            # First, send sources
+            sources = [
+                {
+                    'content': r['content'],
+                    'score': r['score'],
+                    'metadata': r['metadata'],
+                    'source_type': r.get('source_type', 'unknown'),
+                    'rank_info': r.get('rank_info', '')
+                }
+                for r in results
+            ]
+            
+            yield f"data: {json.dumps({'type': 'sources', 'sources': sources})}\n\n"
+            
+            if not results:
+                no_info_msg = "I couldn't find any relevant information in the document store to answer your question."
+                yield f"data: {json.dumps({'type': 'content', 'content': no_info_msg})}\n\n"
+                yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                return
+            
+            # Build context from search results
+            context = "\n\n".join([
+                f"[Source {i+1}]: {r['content']}" 
+                for i, r in enumerate(results)
+            ])
+            
+            # ============================================================
+            # STAGE 1: Initial Thinking (Flash Thinking Model)
+            # ============================================================
+            yield f"data: {json.dumps({'type': 'stage_marker', 'stage': 1, 'name': 'Initial Thinking'})}\n\n"
+            
+            stage1_prompt = f"""You are an expert AI assistant. Analyze the user's question and the provided context.
+
+Think step-by-step about:
+1. What is the user really asking?
+2. What information from the context is relevant?
+3. What would be a good initial answer?
+
+Context:
+{context}
+
+Question: {request.query}
+
+Provide your thoughts and a draft answer."""
+            
+            stage1_response = client.models.generate_content_stream(
+                model="gemini-2.0-flash-thinking-exp-1219",
+                contents=stage1_prompt,
+                config=types.GenerateContentConfig(
+                    thinking_config=types.ThinkingConfig(
+                        include_thoughts=True
+                    )
+                )
+            )
+            
+            stage1_thoughts = ""
+            stage1_draft = ""
+            
+            for chunk in stage1_response:
+                for part in chunk.candidates[0].content.parts:
+                    if part.thought:
+                        stage1_thoughts += part.text
+                        yield f"data: {json.dumps({'type': 'stage1_thinking', 'content': part.text})}\n\n"
+                    elif part.text:
+                        stage1_draft += part.text
+                        yield f"data: {json.dumps({'type': 'stage1_draft', 'content': part.text})}\n\n"
+                await asyncio.sleep(0.01)
+            
+            # ============================================================
+            # STAGE 2: Reflection (Pro Model)
+            # ============================================================
+            yield f"data: {json.dumps({'type': 'stage_marker', 'stage': 2, 'name': 'Reflection'})}\n\n"
+            
+            stage2_prompt = f"""You are a critical reviewer. Analyze the draft answer below.
+
+User's Question: {request.query}
+
+Draft Answer:
+{stage1_draft}
+
+Available Context:
+{context}
+
+Your task:
+1. Does the draft answer FULLY address the user's intent?
+2. Are there any gaps or missing details?
+3. Should we ask follow-up questions or retrieve more information?
+
+Provide a brief reflection (2-3 sentences) on the quality and completeness of the draft."""
+            
+            stage2_response = client.models.generate_content(
+                model="gemini-2.5-pro",
+                contents=stage2_prompt
+            )
+            
+            stage2_reflection = stage2_response.candidates[0].content.parts[0].text
+            yield f"data: {json.dumps({'type': 'stage2_reflection', 'content': stage2_reflection})}\n\n"
+            
+            # ============================================================
+            # STAGE 3: Final Synthesis (Pro Model with Thinking)
+            # ============================================================
+            yield f"data: {json.dumps({'type': 'stage_marker', 'stage': 3, 'name': 'Final Answer'})}\n\n"
+            
+            stage3_prompt = f"""You are an expert AI assistant. Synthesize a final, comprehensive answer.
+
+User's Question: {request.query}
+
+Context:
+{context}
+
+Initial Thoughts:
+{stage1_thoughts}
+
+Draft Answer:
+{stage1_draft}
+
+Reflection:
+{stage2_reflection}
+
+Now, provide a polished, detailed final answer that:
+1. Fully addresses the user's intent
+2. Incorporates insights from the reflection
+3. Uses clear Markdown formatting
+4. Stays strictly within the provided context
+
+Final Answer:"""
+            
+            stage3_response = client.models.generate_content_stream(
+                model="gemini-2.5-pro",
+                contents=stage3_prompt,
+                config=types.GenerateContentConfig(
+                    thinking_config=types.ThinkingConfig(
+                        include_thoughts=True
+                    )
+                )
+            )
+            
+            # Stream the final response
+            for chunk in stage3_response:
+                for part in chunk.candidates[0].content.parts:
+                    if part.thought:
+                        yield f"data: {json.dumps({'type': 'stage3_thinking', 'content': part.text})}\n\n"
+                    elif part.text:
+                        yield f"data: {json.dumps({'type': 'content', 'content': part.text})}\n\n"
+                await asyncio.sleep(0.01)
+            
+            # Send completion signal
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            
+        except Exception as e:
+            print(f"[Qdrant Test] Streaming RAG error: {e}")
+            import traceback
+            traceback.print_exc()
+            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+    
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
 
 @app.get("/stats")
 async def stats():
