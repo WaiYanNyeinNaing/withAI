@@ -10,11 +10,9 @@ A sophisticated Retrieval-Augmented Generation (RAG) system powered by Google Ge
 - **Intelligent Deduplication**: Combines results from both methods (typically 5-10 unique chunks)
 
 ### 🧠 3-Stage Step-Back Prompting
-All stages use `gemini-2.0-flash-thinking-exp-1219` for optimal speed while maintaining quality:
-
-1. **Stage 1 - Initial Thinking**: Fast initial analysis and draft answer
-2. **Stage 2 - Reflection**: Critical review to identify gaps and ensure intent alignment
-3. **Stage 3 - Final Synthesis**: Polished comprehensive answer incorporating all insights
+1. **Stage 1 - Initial Thinking** (`gemini-2.0-flash-thinking-exp-1219`): Fast initial analysis and draft answer
+2. **Stage 2 - Reflection** (`gemini-2.5-pro`): Critical review to identify gaps and ensure intent alignment
+3. **Stage 3 - Final Synthesis** (`gemini-2.5-pro`): Polished comprehensive answer incorporating all insights
 
 ### 📝 Smart Chunking
 - **Hybrid Semantic Chunking**: Base splitting (1500 chars) + semantic refinement (90th percentile threshold)
@@ -138,7 +136,8 @@ Frontend runs on: **http://localhost:5173**
 - react-syntax-highlighter
 
 **AI Models**:
-- `gemini-2.0-flash-thinking-exp-1219` (All 3 stages - optimized for speed and quality)
+- `gemini-2.0-flash-thinking-exp-1219` (Stage 1 - Initial thinking)
+- `gemini-2.5-pro` (Stages 2 & 3 - Reflection and synthesis)
 - `embedding-001` (Vector embeddings)
 
 ## 🔧 Configuration
@@ -150,10 +149,10 @@ GOOGLE_API_KEY=your_api_key_here
 
 ## 📊 Performance Notes
 
-- **Response Time**: ~5-10 seconds (3 Flash model calls - significantly faster than Pro)
-- **Quality**: Excellent intent understanding and completeness with Flash Thinking model
+- **Response Time**: ~8-15 seconds (Flash for Stage 1, Pro for Stages 2 & 3)
+- **Quality**: Superior reasoning with Pro model for reflection and synthesis
 - **Context Size**: 5-10 unique chunks per query (hybrid search deduplication)
-- **Cost**: Highly cost-effective using Flash model for all stages
+- **Cost**: Balanced - Flash for speed, Pro for quality
 
 ## 🤝 Contributing
 
