@@ -32,6 +32,7 @@ class AddDocumentRequest(BaseModel):
 class SearchRequest(BaseModel):
     query: str
     top_k: int = 3
+    mode: str = "pro"  # "pro" or "flash"
 
 @app.get("/")
 async def index():
@@ -273,10 +274,18 @@ async def ask_question_stream(request: SearchRequest):
             
             client = genai.Client(api_key=api_key)
             
-            print(f"[Qdrant Test] Streaming RAG Query: '{request.query}'")
+            print(f"[Qdrant Test] Streaming RAG Query: '{request.query}' (Mode: {request.mode})")
+            
+            # Adjust top_k based on mode
+            if request.mode == "flash":
+                # Flash mode: Get more chunks (10 BM25 + 10 semantic)
+                top_k = 10
+            else:
+                # Pro mode: Use requested top_k (default 5)
+                top_k = request.top_k
             
             # Use Hybrid Search for better retrieval
-            results = doc_store.hybrid_search(request.query, top_k=request.top_k)
+            results = doc_store.hybrid_search(request.query, top_k=top_k)
             
             # First, send sources
             sources = [
@@ -304,6 +313,52 @@ async def ask_question_stream(request: SearchRequest):
                 for i, r in enumerate(results)
             ])
             
+            # ============================================================
+            # FLASH MODE: Single-step quick answer
+            # ============================================================
+            if request.mode == "flash":
+                flash_prompt = f"""You are a helpful AI assistant. Answer the user's question based ONLY on the provided context.
+
+Context:
+{context}
+
+User Question: {request.query}
+
+Instructions:
+- Provide a clear, concise answer
+- Use markdown formatting for better readability
+- Stay strictly within the provided context
+- If the context doesn't contain enough information, say so
+
+Answer:"""
+                
+                response = client.models.generate_content_stream(
+                    model="gemini-2.0-flash-thinking-exp-1219",
+                    contents=flash_prompt,
+                    config=types.GenerateContentConfig(
+                        thinking_config=types.ThinkingConfig(
+                            include_thoughts=True
+                        )
+                    )
+                )
+                
+                # Stream the response
+                for chunk in response:
+                    if chunk.candidates and len(chunk.candidates) > 0:
+                        candidate = chunk.candidates[0]
+                        if candidate.content and candidate.content.parts:
+                            for part in candidate.content.parts:
+                                # Skip thoughts in flash mode, only stream content
+                                if hasattr(part, 'text') and part.text and not (hasattr(part, 'thought') and part.thought):
+                                    yield f"data: {json.dumps({'type': 'content', 'content': part.text})}\n\n"
+                    await asyncio.sleep(0.01)
+                
+                # Send completion signal
+                yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                return
+            
+            # ============================================================
+            # PRO MODE: 3-Stage Step-Back Prompting
             # ============================================================
             # STAGE 1: Initial Thinking (Flash Thinking Model)
             # ============================================================

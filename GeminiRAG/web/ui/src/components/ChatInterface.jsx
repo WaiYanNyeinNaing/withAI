@@ -10,6 +10,7 @@ export function ChatInterface() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState('pro'); // 'pro' or 'flash'
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -41,7 +42,7 @@ export function ChatInterface() {
       let stage3Thinking = '';
       let sources = [];
 
-      await api.askQuestionStream(userMessage, 5, (chunk) => {
+      await api.askQuestionStream(userMessage, 5, mode, (chunk) => {
         if (chunk.type === 'sources') {
           sources = chunk.sources;
         } else if (chunk.type === 'stage1_thinking') {
@@ -311,6 +312,36 @@ export function ChatInterface() {
       {/* Input Area */}
       <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-white via-white to-transparent pt-10 pb-6 px-4">
         <div className="max-w-3xl mx-auto">
+          {/* Mode Selector */}
+          <div className="mb-3 flex items-center justify-center gap-2">
+            <span className="text-xs text-gray-500">Mode:</span>
+            <button
+              onClick={() => setMode('pro')}
+              className={clsx(
+                "px-3 py-1.5 text-xs font-medium rounded-lg transition-all",
+                mode === 'pro'
+                  ? "bg-purple-600 text-white shadow-sm"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              )}
+            >
+              🧠 Pro Mode
+            </button>
+            <button
+              onClick={() => setMode('flash')}
+              className={clsx(
+                "px-3 py-1.5 text-xs font-medium rounded-lg transition-all",
+                mode === 'flash'
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              )}
+            >
+              ⚡ Flash Mode
+            </button>
+            <span className="text-xs text-gray-400 ml-2">
+              {mode === 'pro' ? '(3-stage reasoning)' : '(quick answer)'}
+            </span>
+          </div>
+
           <form onSubmit={handleSubmit} className="relative shadow-lg rounded-xl border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-green-500/20 focus-within:border-green-500 transition-all">
             <input
               type="text"

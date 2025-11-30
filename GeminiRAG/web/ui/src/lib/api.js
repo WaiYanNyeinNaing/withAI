@@ -34,13 +34,13 @@ export const api = {
         return response.data;
     },
 
-    askQuestionStream: async (query, topK = 5, onChunk) => {
+    askQuestionStream: async (query, topK = 5, mode = 'pro', onChunk) => {
         const response = await fetch('/ask_stream', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ query, top_k: topK }),
+            body: JSON.stringify({ query, top_k: topK, mode }),
         });
 
         const reader = response.body.getReader();

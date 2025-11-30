@@ -20,6 +20,7 @@ A sophisticated Retrieval-Augmented Generation (RAG) system powered by Google Ge
 - **Topic-Aware**: Splits on semantic shifts while preserving context
 
 ### 🎨 Modern UI
+- **Mode Selector**: Choose between Pro Mode (3-stage reasoning) or Flash Mode (quick answers)
 - **Streaming Responses**: Real-time display of all reasoning stages
 - **Collapsible Stages**: Color-coded sections for each reasoning phase
 - **Markdown Rendering**: Syntax-highlighted code blocks, tables, and rich formatting
@@ -82,8 +83,11 @@ Frontend runs on: **http://localhost:5173**
 
 2. **Ask Questions**:
    - Switch to "Chat" tab
+   - **Choose your mode**:
+     - 🧠 **Pro Mode** (default): 3-stage reasoning for comprehensive answers (~8-15s)
+     - ⚡ **Flash Mode**: Quick single-step answers with more context (~3-5s)
    - Ask questions about your documents
-   - Watch the 3-stage reasoning process unfold
+   - Watch the reasoning process (Pro Mode) or get instant answers (Flash Mode)
 
 3. **Explore Reasoning**:
    - 🧠 **Stage 1: Initial Thinking** - See the model's first thoughts
